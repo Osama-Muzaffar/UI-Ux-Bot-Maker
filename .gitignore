@@ -1,0 +1,9 @@
+# dependencies & builds
+node_modules/
+design-studio/dist-web/
+
+# local / personal
+.DS_Store
+.claude/
+design-tests/
+*.log

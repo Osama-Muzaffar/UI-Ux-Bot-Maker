@@ -1,0 +1,23 @@
+{
+  "name": "design-agent-reference-analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server: reference app analysis + design lessons memory for design-agent",
+  "scripts": {
+    "build": "./node_modules/esbuild/bin/esbuild src/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/index.js --external:node:sqlite --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "jpeg-js": "^0.4.4",
+    "pngjs": "^7.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pngjs": "^6.0.5",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0"
+  }
+}

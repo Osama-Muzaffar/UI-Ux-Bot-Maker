@@ -1,0 +1,30 @@
+{
+  "name": "design-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local web app for the design-agent Claude Code plugin",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node node_modules/vite/bin/vite.js build",
+    "start": "node --no-warnings node_modules/tsx/dist/cli.mjs server/index.ts",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.329",
+    "express": "^5.3.0",
+    "marked": "^18.2.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}

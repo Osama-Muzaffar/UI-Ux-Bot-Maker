@@ -1,0 +1,31 @@
+# Gym tracker — color pairs (label | foreground | background [| min ratio])
+light onPrimary/primary                   | #FFFFFF | #1F5E4A
+light onPrimaryContainer/primaryContainer | #002116 | #A8F0D0
+light onSecondary/secondary               | #FFFFFF | #7A5200
+light onSecondaryContainer/secondaryContainer | #2A1800 | #FFDDB3
+light onTertiary/tertiary                 | #FFFFFF | #3D5F8F
+light onTertiaryContainer/tertiaryContainer | #001B3D | #D5E3FF
+light onError/error                       | #FFFFFF | #BA1A1A
+light onErrorContainer/errorContainer     | #410002 | #FFDAD6
+light onSurface/surface                   | #191C1A | #F7FAF6
+light onSurface/surfaceContainerLow       | #191C1A | #F1F4F0
+light onSurface/surfaceContainerHigh      | #191C1A | #E6E9E5
+light onSurfaceVariant/surface            | #404943 | #F7FAF6
+light onSurfaceVariant/surfaceContainerHigh | #404943 | #E6E9E5
+light primary-as-text/surface             | #1F5E4A | #F7FAF6
+light outline/surface                     | #707973 | #F7FAF6 | 3
+dark onPrimary/primary                    | #003827 | #8DD5B5
+dark onPrimaryContainer/primaryContainer  | #A8F0D0 | #005138
+dark onSecondary/secondary                | #412D00 | #F5BC6B
+dark onSecondaryContainer/secondaryContainer | #FFDDB3 | #5C3D00
+dark onTertiary/tertiary                  | #00315F | #A8C8FF
+dark onTertiaryContainer/tertiaryContainer | #D5E3FF | #23477A
+dark onError/error                        | #690005 | #FFB4AB
+dark onErrorContainer/errorContainer      | #FFDAD6 | #93000A
+dark onSurface/surface                    | #E0E3DF | #101412
+dark onSurface/surfaceContainerLow        | #E0E3DF | #181D1A
+dark onSurface/surfaceContainerHigh       | #E0E3DF | #262B28
+dark onSurfaceVariant/surface             | #BFC9C1 | #101412
+dark onSurfaceVariant/surfaceContainerHigh | #BFC9C1 | #262B28
+dark primary-as-text/surface              | #8DD5B5 | #101412
+dark outline/surface                      | #89938C | #101412 | 3

@@ -1,0 +1,7 @@
+{
+  "name": "osama-local",
+  "owner": { "name": "Osama Muzaffar" },
+  "plugins": [
+    { "name": "design-agent", "source": "./design-agent", "description": "UI/UX design agent for Android apps" }
+  ]
+}
