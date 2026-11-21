@@ -25805,8 +25805,8 @@ var StdioServerTransport = class {
 };
 
 // src/index.ts
-import { readFileSync as readFileSync3, writeFileSync as writeFileSync4 } from "node:fs";
-import { basename, join as join4 } from "node:path";
+import { readFileSync as readFileSync4, writeFileSync as writeFileSync5 } from "node:fs";
+import { basename, join as join5 } from "node:path";
 
 // src/fetch.ts
 import { writeFileSync as writeFileSync2 } from "node:fs";
@@ -26153,9 +26153,9 @@ var LessonStore = class {
   search(query, category, limit = 10) {
     const q = tokens(query);
     return this.all().filter((l) => !l.promoted && (!category || l.category === category)).map((l) => {
-      const words = tokens(`${l.category} ${l.mistake} ${l.why} ${l.do_instead}`);
+      const words2 = tokens(`${l.category} ${l.mistake} ${l.why} ${l.do_instead}`);
       let hits = 0;
-      for (const w of q) if (words.has(w) || [...words].some((x) => x.startsWith(w) || w.startsWith(x))) hits++;
+      for (const w of q) if (words2.has(w) || [...words2].some((x) => x.startsWith(w) || w.startsWith(x))) hits++;
       return { lesson: l, score: q.size ? hits / q.size + Math.min(l.seen, 5) * 0.02 : l.seen };
     }).filter((r) => !q.size || r.score > 0.05).sort((a, b) => b.score - a.score).slice(0, limit);
   }
@@ -26178,6 +26178,72 @@ var LessonStore = class {
     writeFileSync3(this.mdPath, md);
   }
 };
+
+// src/icons.ts
+import { existsSync as existsSync2, mkdirSync as mkdirSync3, readFileSync as readFileSync3, statSync, writeFileSync as writeFileSync4 } from "node:fs";
+import { join as join4 } from "node:path";
+var CDN = "https://fonts.gstatic.com/s/i/short-term/release";
+var METADATA_URL = "https://fonts.google.com/metadata/icons";
+var ICON_DIR = join4(DATA_DIR, "icons");
+var META_FILE = join4(ICON_DIR, "metadata.json");
+var META_MAX_AGE_MS = 30 * 24 * 3600 * 1e3;
+var STYLES = ["outlined", "rounded", "sharp"];
+var cache;
+async function fetchWithTimeout(url, ms = 2e4) {
+  return fetch(url, { signal: AbortSignal.timeout(ms), headers: { "User-Agent": "design-agent" } });
+}
+async function loadMetadata() {
+  if (cache) return cache;
+  mkdirSync3(ICON_DIR, { recursive: true });
+  const fresh = existsSync2(META_FILE) && Date.now() - statSync(META_FILE).mtimeMs < META_MAX_AGE_MS;
+  if (!fresh) {
+    try {
+      const raw = await (await fetchWithTimeout(METADATA_URL, 3e4)).text();
+      const data = JSON.parse(raw.slice(raw.indexOf("{")));
+      const icons = data.icons.filter((i) => !(i.unsupported_families ?? []).some((f) => f.startsWith("Material Symbols"))).map(({ name, popularity, categories, tags }) => ({ name, popularity, categories, tags }));
+      writeFileSync4(META_FILE, JSON.stringify(icons));
+    } catch (e) {
+      if (!existsSync2(META_FILE)) throw new Error(`Could not download the icon list: ${e.message}`);
+    }
+  }
+  cache = JSON.parse(readFileSync3(META_FILE, "utf8"));
+  return cache;
+}
+var words = (s) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+async function searchIcons(query, limit = 12) {
+  const icons = await loadMetadata();
+  const q = words(query);
+  if (!q.length) return [];
+  const maxPop = Math.max(...icons.map((i) => i.popularity || 0), 1);
+  return icons.map((i) => {
+    const nameWords = words(i.name);
+    const tags = new Set(i.tags.flatMap(words));
+    let score = 0;
+    for (const w of q) {
+      if (i.name === q.join("_")) score += 10;
+      if (nameWords.includes(w)) score += 4;
+      else if (i.name.includes(w)) score += 2;
+      if (tags.has(w)) score += 1.5;
+      else if ([...tags].some((t) => t.startsWith(w))) score += 0.5;
+    }
+    return { i, score: score ? score + i.popularity / maxPop * 1.5 : 0 };
+  }).filter((r) => r.score > 0).sort((a, b) => b.score - a.score).slice(0, limit).map(({ i }) => ({ name: i.name, categories: i.categories, tags: i.tags.slice(0, 6) }));
+}
+async function iconSvg(name, style = "outlined", filled = false) {
+  if (!/^[a-z0-9_]{1,64}$/.test(name)) throw new Error(`Invalid icon name "${name}" (use names like "home", "arrow_back").`);
+  const dir = join4(ICON_DIR, style);
+  mkdirSync3(dir, { recursive: true });
+  const file = join4(dir, `${name}${filled ? "-fill" : ""}.svg`);
+  if (existsSync2(file)) return readFileSync3(file, "utf8");
+  const url = `${CDN}/materialsymbols${style}/${name}/${filled ? "fill1" : "default"}/24px.svg`;
+  const res = await fetchWithTimeout(url);
+  if (res.status === 404) throw new Error(`No Material Symbol named "${name}". Use icon_search to find the right name.`);
+  if (!res.ok) throw new Error(`Icon download failed (HTTP ${res.status}) for "${name}"`);
+  const svg = (await res.text()).trim();
+  if (!svg.startsWith("<svg")) throw new Error(`Unexpected response for "${name}"`);
+  writeFileSync4(file, svg);
+  return svg;
+}
 
 // src/index.ts
 var server = new McpServer({ name: "design-agent-reference-analyzer", version: "0.1.0" });
@@ -26230,12 +26296,12 @@ server.registerTool(
       if (screens) {
         const known = new Set(meta2.screenshots.map((s) => basename(s.file)));
         const unknown2 = screens.filter((s) => !known.has(basename(s.file))).map((s) => s.file);
-        writeJson(join4(dir, "analysis.json"), { slug, analyzedAt: (/* @__PURE__ */ new Date()).toISOString(), screens });
-        return json({ saved: join4(dir, "analysis.json"), count: screens.length, unknownFiles: unknown2, next: "Call extract_style." });
+        writeJson(join5(dir, "analysis.json"), { slug, analyzedAt: (/* @__PURE__ */ new Date()).toISOString(), screens });
+        return json({ saved: join5(dir, "analysis.json"), count: screens.length, unknownFiles: unknown2, next: "Call extract_style." });
       }
       const images = meta2.screenshots.filter((s) => s.format === "png" || s.format === "jpg" || s.format === "webp").map((s) => ({
         type: "image",
-        data: readFileSync3(s.file).toString("base64"),
+        data: readFileSync4(s.file).toString("base64"),
         mimeType: s.format === "jpg" ? "image/jpeg" : `image/${s.format}`
       }));
       if (!images.length) return text(`No screenshots for "${slug}". Add PNG/JPG files to ${dir} and update meta.json, or re-run fetch_reference.`);
@@ -26278,7 +26344,7 @@ server.registerTool(
       for (const s of meta2.screenshots) {
         const px = decode(s.file);
         if (px) per.push({ file: basename(s.file), ...analyzePixels(px) });
-        else skipped.push(`${basename(s.file)} (${sniffFormat(readFileSync3(s.file))})`);
+        else skipped.push(`${basename(s.file)} (${sniffFormat(readFileSync4(s.file))})`);
       }
       if (!per.length) return text(`No decodable PNG/JPG screenshots for "${slug}". Skipped: ${skipped.join(", ") || "none"}`);
       const count = (xs) => {
@@ -26312,8 +26378,8 @@ server.registerTool(
         cornerRadius: judgment.corner_radius,
         notes: judgment.notes
       };
-      writeJson(join4(refDir(slug), "style.json"), style);
-      return json({ saved: join4(refDir(slug), "style.json"), style, next: "Call pattern_report." });
+      writeJson(join5(refDir(slug), "style.json"), style);
+      return json({ saved: join5(refDir(slug), "style.json"), style, next: "Call pattern_report." });
     } catch (e) {
       return fail(e);
     }
@@ -26335,8 +26401,8 @@ server.registerTool(
     try {
       const meta2 = loadMeta(slug);
       const dir = refDir(slug);
-      const analysis = readJson(join4(dir, "analysis.json"));
-      const style = readJson(join4(dir, "style.json"));
+      const analysis = readJson(join5(dir, "analysis.json"));
+      const style = readJson(join5(dir, "style.json"));
       const list = (xs) => xs.map((x) => `- ${x}`).join("\n");
       const md = [
         `# Pattern report \u2014 ${meta2.name}`,
@@ -26368,14 +26434,75 @@ Category: ${meta2.category ?? "\u2014"} \xB7 Fetched: ${meta2.fetchedAt.slice(0,
         list(avoid),
         ""
       ].join("\n");
-      const path = join4(dir, "report.md");
-      writeFileSync4(path, md);
+      const path = join5(dir, "report.md");
+      writeFileSync5(path, md);
       return text(`Saved ${path}
 
 ${md}`);
     } catch (e) {
       return fail(e);
     }
+  }
+);
+var PLACE_ICON_JS = `// Paste into figma_execute. ICONS = { name: svg } from icons_svg.
+function placeIcon(parent, name, svg, { size = 24, color = "#1C1B1F", index } = {}) {
+  const node = figma.createNodeFromSvg(svg);          // 24x24 frame with vector paths
+  node.name = "Icon/" + name;
+  node.fills = [];                                     // no frame background
+  if (size !== 24) node.rescale(size / 24);
+  const h = color.replace("#", "");
+  const rgb = { r: parseInt(h.slice(0, 2), 16) / 255, g: parseInt(h.slice(2, 4), 16) / 255, b: parseInt(h.slice(4, 6), 16) / 255 };
+  for (const v of node.findAll((n) => n.type === "VECTOR" || n.type === "BOOLEAN_OPERATION")) v.fills = [{ type: "SOLID", color: rgb }];
+  if (index === undefined) parent.appendChild(node); else parent.insertChild(index, node);
+  return node;
+}`;
+server.registerTool(
+  "icon_search",
+  {
+    title: "Search Material Symbols icons",
+    description: "Find the right Material Symbols icon name for a meaning (e.g. 'settings', 'add expense', 'back arrow', 'profile'). Returns icon names to pass to icons_svg. Use this whenever a screen needs an icon and you are not sure of the exact name.",
+    inputSchema: {
+      query: external_exports.string().min(1),
+      limit: external_exports.number().int().min(1).max(30).default(8)
+    }
+  },
+  async ({ query, limit }) => {
+    try {
+      return json({ query, results: await searchIcons(query, limit) });
+    } catch (e) {
+      return fail(e);
+    }
+  }
+);
+server.registerTool(
+  "icons_svg",
+  {
+    title: "Get icon SVGs",
+    description: "Get SVG markup for Material Symbols icons (Google's official Android icons, Apache 2.0) to place real icons in Figma with figma.createNodeFromSvg(). Fetch every icon a screen needs in ONE call. The result includes a placeIcon() helper for figma_execute.",
+    inputSchema: {
+      names: external_exports.array(external_exports.string()).min(1).max(40).describe("Material Symbols names, e.g. ['home', 'arrow_back', 'settings']"),
+      style: external_exports.enum(STYLES).default("outlined").describe("Match the design system: outlined (default), rounded or sharp"),
+      filled: external_exports.boolean().default(false).describe("Filled variant \u2014 use for the selected/active state (e.g. active nav item)")
+    }
+  },
+  async ({ names, style, filled }) => {
+    const icons = {};
+    const missing = [];
+    await Promise.all(
+      [...new Set(names)].map(async (n) => {
+        try {
+          icons[n] = await iconSvg(n, style, filled);
+        } catch (e) {
+          let suggestions;
+          try {
+            suggestions = (await searchIcons(n.replace(/_/g, " "), 5)).map((r) => r.name);
+          } catch {
+          }
+          missing.push({ name: n, error: e.message, suggestions });
+        }
+      })
+    );
+    return json({ style, filled, icons, missing, placeIconHelper: PLACE_ICON_JS });
   }
 );
 server.registerTool(

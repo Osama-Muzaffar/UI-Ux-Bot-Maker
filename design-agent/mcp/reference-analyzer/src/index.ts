@@ -7,6 +7,7 @@ import { basename, join } from "node:path";
 import { fetchReference } from "./fetch.js";
 import { analyzePixels, decode, sniffFormat, type StyleStats } from "./image.js";
 import { CATEGORIES, LessonStore } from "./lessons.js";
+import { STYLES, iconSvg, searchIcons } from "./icons.js";
 import { DATA_DIR, loadMeta, readJson, refDir, writeJson } from "./store.js";
 
 const server = new McpServer({ name: "design-agent-reference-analyzer", version: "0.1.0" });
@@ -227,6 +228,75 @@ server.registerTool(
     } catch (e) {
       return fail(e);
     }
+  },
+);
+
+// ---------- Icons (Material Symbols) ----------
+
+const PLACE_ICON_JS = `// Paste into figma_execute. ICONS = { name: svg } from icons_svg.
+function placeIcon(parent, name, svg, { size = 24, color = "#1C1B1F", index } = {}) {
+  const node = figma.createNodeFromSvg(svg);          // 24x24 frame with vector paths
+  node.name = "Icon/" + name;
+  node.fills = [];                                     // no frame background
+  if (size !== 24) node.rescale(size / 24);
+  const h = color.replace("#", "");
+  const rgb = { r: parseInt(h.slice(0, 2), 16) / 255, g: parseInt(h.slice(2, 4), 16) / 255, b: parseInt(h.slice(4, 6), 16) / 255 };
+  for (const v of node.findAll((n) => n.type === "VECTOR" || n.type === "BOOLEAN_OPERATION")) v.fills = [{ type: "SOLID", color: rgb }];
+  if (index === undefined) parent.appendChild(node); else parent.insertChild(index, node);
+  return node;
+}`;
+
+server.registerTool(
+  "icon_search",
+  {
+    title: "Search Material Symbols icons",
+    description:
+      "Find the right Material Symbols icon name for a meaning (e.g. 'settings', 'add expense', 'back arrow', 'profile'). Returns icon names to pass to icons_svg. Use this whenever a screen needs an icon and you are not sure of the exact name.",
+    inputSchema: {
+      query: z.string().min(1),
+      limit: z.number().int().min(1).max(30).default(8),
+    },
+  },
+  async ({ query, limit }) => {
+    try {
+      return json({ query, results: await searchIcons(query, limit) });
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.registerTool(
+  "icons_svg",
+  {
+    title: "Get icon SVGs",
+    description:
+      "Get SVG markup for Material Symbols icons (Google's official Android icons, Apache 2.0) to place real icons in Figma with figma.createNodeFromSvg(). Fetch every icon a screen needs in ONE call. The result includes a placeIcon() helper for figma_execute.",
+    inputSchema: {
+      names: z.array(z.string()).min(1).max(40).describe("Material Symbols names, e.g. ['home', 'arrow_back', 'settings']"),
+      style: z.enum(STYLES).default("outlined").describe("Match the design system: outlined (default), rounded or sharp"),
+      filled: z.boolean().default(false).describe("Filled variant — use for the selected/active state (e.g. active nav item)"),
+    },
+  },
+  async ({ names, style, filled }) => {
+    const icons: Record<string, string> = {};
+    const missing: { name: string; error: string; suggestions?: string[] }[] = [];
+    await Promise.all(
+      [...new Set(names)].map(async (n) => {
+        try {
+          icons[n] = await iconSvg(n, style, filled);
+        } catch (e) {
+          let suggestions: string[] | undefined;
+          try {
+            suggestions = (await searchIcons(n.replace(/_/g, " "), 5)).map((r) => r.name);
+          } catch {
+            /* metadata unavailable */
+          }
+          missing.push({ name: n, error: (e as Error).message, suggestions });
+        }
+      }),
+    );
+    return json({ style, filled, icons, missing, placeIconHelper: PLACE_ICON_JS });
   },
 );
 

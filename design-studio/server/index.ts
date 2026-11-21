@@ -41,13 +41,16 @@ const param = (req: Request, k: string) => String(req.params[k]);
 app.get(
   "/api/health",
   wrap(async (_req, res) => {
-    const figmaBridge = await new Promise<boolean>((resolve) => {
-      const s = createConnection({ host: "127.0.0.1", port: 9223 });
-      const end = (ok: boolean) => (s.destroy(), resolve(ok));
-      s.setTimeout(600, () => end(false));
-      s.once("connect", () => end(true));
-      s.once("error", () => end(false));
-    });
+    // figma-console's bridge prefers 9223 but falls back to 9224–9232 when that port is taken.
+    const probe = (port: number) =>
+      new Promise<boolean>((resolve) => {
+        const s = createConnection({ host: "127.0.0.1", port });
+        const end = (ok: boolean) => (s.destroy(), resolve(ok));
+        s.setTimeout(600, () => end(false));
+        s.once("connect", () => end(true));
+        s.once("error", () => end(false));
+      });
+    const figmaBridge = (await Promise.all(Array.from({ length: 10 }, (_, i) => probe(9223 + i)))).some(Boolean);
     const pluginInstalled = existsSync(join(homedir(), ".claude", "plugins", "cache", "osama-local", "design-agent"));
     res.json({ figmaBridge, pluginInstalled, dataDir: DATA_DIR });
   }),
@@ -126,7 +129,11 @@ app.get("/api/projects/:id/preview/:name", (req, res) => {
   const name = param(req, "name");
   if (!/^[\w.-]+\.(png|jpe?g|webp)$/i.test(name)) return void res.status(400).end();
   try {
-    res.sendFile(safePath(param(req, "id"), `previews/${name}`));
+    // dotfiles: "allow" — the data dir is ~/.design-agent, and send() refuses any path with a dot-folder by default.
+    // safePath() already confines the request to this project's folder.
+    res.sendFile(safePath(param(req, "id"), `previews/${name}`), { dotfiles: "allow", maxAge: "1d" }, (err) => {
+      if (err && !res.headersSent) res.status(404).end();
+    });
   } catch {
     res.status(404).end();
   }

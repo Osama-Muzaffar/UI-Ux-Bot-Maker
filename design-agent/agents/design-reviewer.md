@@ -16,8 +16,10 @@ Check, in this order:
 6. **Hierarchy** — one clear primary action; most important info in the top third.
 7. **Text overflow** — long names, large numbers, 1.3× font scale: truncate/wrap handled.
 8. **States** — empty, loading, error designed.
-9. **Material 3** — components used as intended (e.g. FAB for primary create, nav bar 3–5 items).
-10. **Lessons** — flag any violated lesson from the list you were given (if none was given, read `~/.design-agent/LESSONS.md`).
+8b. **Icons** — real icons everywhere the spec names one (no grey squares, emoji or text stand-ins); one icon style; active state filled; icon-only buttons have a 48dp target.
+9. **Splash** (for `00-Splash`) — only icon + background (+ optional branding); icon inside the safe circle; light and dark; no text, buttons or loaders.
+10. **Material 3** — components used as intended (e.g. FAB for primary create, nav bar 3–5 items).
+11. **Lessons** — flag any violated lesson from the list you were given (if none was given, read `~/.design-agent/LESSONS.md`).
 
 Output ONLY this table, most severe first:
 

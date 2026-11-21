@@ -22,6 +22,21 @@ Only run on screens the user approved.
 5. **Verify**: `./gradlew assembleDebug`, then render previews/screenshot and compare with the Figma frame.
    Any visible difference → fix it, and add a lesson (category `code`) to `../../lessons/LESSONS.md`.
 
+## Icons
+Same Material Symbols as Figma: save each SVG from `icons_svg` into `res/drawable/ic_<name>.xml`
+(Android Studio → Vector Asset → Local file, or convert the path data), and use
+`Icon(painterResource(R.drawable.ic_<name>), contentDescription = stringResource(...))`.
+Filled variants get their own drawable `ic_<name>_filled`. Decorative icons use `contentDescription = null`.
+
+## Splash screen
+Not a composable screen. Use `androidx.core:core-splashscreen`:
+- `res/values/themes.xml`: a `Theme.App.Starting` theme (parent `Theme.SplashScreen`) with
+  `windowSplashScreenBackground`, `windowSplashScreenAnimatedIcon`, `windowSplashScreenIconBackgroundColor`
+  (if the spec has one) and `postSplashScreenTheme`; a `values-night` variant for dark.
+- `MainActivity`: `installSplashScreen()` before `super.onCreate()`, and `setKeepOnScreenCondition { !ready }`
+  tied to real startup loading — no fixed delays. Add the exit animation from the spec if any.
+- Route to Onboarding / Home / Login after it, as the flow says.
+
 ## Rules
 - No hard-coded colors, dp or sp in screens — theme and tokens only.
 - Touch targets ≥ 48dp (`Modifier.minimumInteractiveComponentSize()`).

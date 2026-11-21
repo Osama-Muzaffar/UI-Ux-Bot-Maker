@@ -1,6 +1,6 @@
 {
   "name": "design-agent",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "UI/UX design agent: app idea -> brief -> flow -> wireframe -> design system -> hi-fi Figma screens -> self-critique -> Jetpack Compose code.",
   "author": {
     "name": "Osama Muzaffar"

@@ -12,6 +12,8 @@ Data lives in `~/.design-agent/` (override with `DESIGN_AGENT_HOME`) so plugin u
 | `analyze_screens(slug[, screens])` | Returns screenshots as images for Claude to look at; with `screens` saves type / layout / navigation per screen |
 | `extract_style(slug[, judgment])` | Measures pixels: theme, palette, brand accents, whitespace → density. With `judgment` (font, radius) saves style.json |
 | `pattern_report(slug, good, take, avoid)` | Writes report.md: screens table, style profile, good / take / avoid, copy limit |
+| `icon_search(query)` | Finds Material Symbols icon names by meaning (e.g. "settings gear" → `settings`) |
+| `icons_svg(names, style, filled)` | SVGs for real icons in Figma via `figma.createNodeFromSvg` (cached in `~/.design-agent/icons/`) + a `placeIcon()` helper |
 | `lessons_add(...)` | Saves a lesson; merges near-duplicates (bumps `seen`); regenerates LESSONS.md |
 | `lessons_search(query)` | Finds relevant lessons before a new design |
 | `lessons_review([promote_id])` | Lessons seen ≥ 3× to promote into SKILL.md; marks them promoted |

@@ -54,8 +54,24 @@ If the file has none yet, create the variables from `04-design-system.md` first 
 - On error: delete any partial frame you created before retrying.
 - Keep each script to one screen; raise `timeout` (e.g. 30000) for larger screens.
 
+## Icons (real vectors — never grey boxes, emoji or text)
+1. Collect every icon name the screen's spec lists. Missing or unsure → `icon_search` (reference-analyzer MCP).
+2. Call `icons_svg` ONCE per screen with all names and the design system's style (`outlined`/`rounded`/`sharp`).
+   Call it again with `filled: true` for active/selected icons (active nav item, toggled favorite).
+3. In `figma_execute`, paste the returned `placeIconHelper` and an `ICONS = { name: svg }` object, then
+   `placeIcon(parent, "home", ICONS.home, { size: 24, color: "#49454F" })`.
+   It uses `figma.createNodeFromSvg`, names the layer `Icon/<name>`, removes the frame fill and recolors the paths.
+4. Icon-only buttons: put the icon in a 48×48 frame (auto layout, centered) named `IconButton/<name>`.
+5. Wireframe mode: real icons too, in the grey `onSurfaceVariant` color.
+6. If an icon truly doesn't exist, use the closest `icon_search` result and note it — never leave a placeholder.
+
+## Splash frame
+`00-Splash` is always the first frame: 360×800, solid background color variable, app icon centered in a
+240×240 (with icon background) or 288×288 (without) frame with a guide circle of 160 / 192dp marking the safe area,
+optional 200×80 branding frame 48dp above the bottom. No text or buttons. Make a light and a dark variant.
+
 ## Wireframe mode
 Only greys (surface, outline, onSurfaceVariant), system font, placeholder rectangles for images.
 
 ## Naming
-Frames `01-Onboarding`, `02-Home`…; layers named by role (`Header`, `SummaryCard`, `RecentList`), never `Frame 123`.
+Frames `00-Splash`, `01-Onboarding`, `02-Home`…; layers named by role (`Header`, `SummaryCard`, `RecentList`), never `Frame 123`.

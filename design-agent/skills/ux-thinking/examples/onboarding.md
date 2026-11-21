@@ -2,6 +2,10 @@
 
 **Goal**: get the user to their first moment of value as fast as possible.
 
+## Before onboarding: splash
+Splash (Android 12+ system SplashScreen) → onboarding on first launch only; returning users skip straight to Home.
+Keep it to icon + background and only as long as startup really takes — the onboarding is where you sell, not the splash.
+
 ## What works
 - **Value before account.** Let people try the core action first; ask for signup when there is
   something to save ("Save your first budget → create account").

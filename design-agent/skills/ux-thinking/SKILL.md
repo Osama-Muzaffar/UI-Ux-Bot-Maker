@@ -43,9 +43,11 @@ and stop. Do not ask about things you can sensibly assume — write them under A
 
 ## Step 2 — Screens and flow  → `02-flow.md`
 1. Screen list as a table: `# | Screen | Purpose | Entry from | Key content`.
-   Number them `01-Onboarding`, `02-Home`, … (these become Figma frame names).
-   Keep v1 small: usually 5–9 screens. Every screen must justify itself against the brief.
-2. Main flow as a line: `Onboarding → Home → <core action> → Result`.
+   **Always start the list with `00-Splash`**, then `01-Onboarding`, `02-Home`, … (these become Figma frame names).
+   Keep v1 small: usually 5–9 screens besides the splash. Every screen must justify itself against the brief.
+   Splash = the Android 12+ system SplashScreen (see "Splash screen" below), not a custom page.
+   Say what happens after it: first launch → Onboarding; returning user → Home (or Login if signed out).
+2. Main flow as a line: `Splash → Onboarding → Home → <core action> → Result`.
    Count taps for the core action. Aim for ≤ 3 from Home.
 3. Navigation model: bottom nav (3–5 destinations), tabs, or single stack. Say why.
 4. Secondary flows (settings, edit, delete, auth) in one line each.
@@ -63,9 +65,32 @@ For each screen, top to bottom, describe regions only — no color, no font choi
 - BottomNav: Home · Reports · Clients · Settings
 States: empty (illustration slot + "Add your first expense" CTA) · loading (skeleton rows) · error (inline banner + Retry)
 ```
+Name every icon with its Material Symbols name in backticks, e.g. `TopBar: back `arrow_back`, action `search``,
+`BottomNav: Home `home` · Reports `bar_chart``. Unsure of a name → `icon_search`. Never write just "icon".
+
 Rules: one primary action per screen; most important content in the top third;
 thumb zone for frequent actions; reuse the same region patterns across screens.
 Every screen MUST list empty, loading and error states.
+
+The splash wireframe is always first and always this shape:
+```
+### 00-Splash  (360×800)
+- Full-screen background (one solid color)
+- App icon, centered (icon canvas 240×240dp with icon background / 288×288dp without)
+- Optional branding image, bottom-centered (200×80dp) — only if the brand needs it
+Exit: first launch → 01-Onboarding · returning user → 02-Home · signed out → Login
+States: loading = stays only while startup data loads (no artificial delay) · error = hand off to the
+next screen and show the error there (never a stuck splash)
+```
+
+### Splash screen (Android 12+ SplashScreen API)
+- It is system-drawn: icon + background color (+ optional branding). No text, buttons, progress bars,
+  ads or custom layouts. Never design a second "custom splash" page after it.
+- Icon with an icon background: 240×240dp canvas, content inside a 160dp circle.
+  Icon without a background: 288×288dp canvas, content inside a 192dp circle. Keep the logo in the safe circle.
+- Background: one opaque color — usually `surface` or `primary`; give light and dark variants.
+- Optional animated icon (AnimatedVectorDrawable), ≤ 1000ms. Optional exit animation into the first screen.
+- Duration: only while the app is genuinely loading; never add a fixed delay.
 
 ## Step 4 — Design system  → `04-design-system.md`
 Derive it from the brief (audience + mood), not from taste defaults. Give a one-line rationale.
@@ -87,20 +112,29 @@ Derive it from the brief (audience + mood), not from taste defaults. Give a one-
   Screen side margin 16dp.
 - **Shape**: corner radius tokens (e.g. small 8, medium 12, large 16, full).
 - **Elevation**: which surfaces use tonal elevation.
+- **Icons**: Material Symbols, one style for the whole app — `outlined` (default), `rounded` (friendly) or
+  `sharp` (formal); say why. Sizes: 24dp standard, 20dp inside chips/dense rows, 40dp+ only for empty-state
+  art. Color: `onSurfaceVariant` by default, `onSurface`/`primary` when active. Active nav item and toggled
+  states use the **filled** variant. Every icon-only button has a 48dp target and a content description.
 - **Components** (spec each: anatomy, sizes, states default/pressed/disabled/error):
   Button (filled, tonal, outlined, text), Card, TextField, TopBar, BottomNav, ListItem, FAB, Chip, Dialog/BottomSheet.
   Add only app-specific components the screens actually need.
+- **Splash**: background color (light + dark), icon background color (if used), icon and optional
+  branding asset descriptions, exit animation (none / fade / slide-up). Add the splash icon-vs-background
+  pair to the contrast file with `| 3` (it is a graphic, so 3:1).
 
 ## Step 5 — Hi-fi spec  → `05-hifi-<screen>.md` (one screen at a time)
 Map each wireframe region to a design-system component + tokens. No new styles.
 If something needs a style that doesn't exist, add it to the design system first, then use it.
-Write real, specific copy (not lorem ipsum). Then hand off to the `figma-design` skill.
+Write real, specific copy (not lorem ipsum). List every icon by Material Symbols name, size, color role and
+filled/outlined, plus its content description. Then hand off to the `figma-design` skill.
 
 ## Rules that never break
 - Material 3 guidelines.
 - Touch targets ≥ 48×48dp.
 - WCAG AA contrast.
 - Empty, loading and error state for every screen.
+- Every app's flow starts with `00-Splash` (Android 12+ system splash spec, not a custom page).
 - 8dp spacing grid; consistent side margins.
 - Text must handle long strings (truncate or wrap — decide per field) and large font scale.
 - References: patterns and structure only. Never copy icons, illustrations, brand colors or text.
