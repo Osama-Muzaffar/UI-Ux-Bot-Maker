@@ -7,45 +7,53 @@ Give it an app idea (and optionally a Play Store reference). It thinks like a se
 
 It stops for your approval after each big step, reviews its own work with a separate reviewer agent, and saves every mistake as a lesson so the next design is better.
 
-![Hi-fi screens designed by the agent in Figma](docs/images/hifi-batch-1.png)
+<p align="center">
+  <img src="docs/images/pane-02-looks.png" width="230" alt="Looks screen">&nbsp;
+  <img src="docs/images/pane-04-widgets.png" width="230" alt="Widgets screen">&nbsp;
+  <img src="docs/images/pane-06-customize.png" width="230" alt="Customize screen">
+</p>
 
 ---
 
-## Results
+## Results — "Pane", a glass widgets app
 
-Everything below was designed **by the agent in Figma** from a one-line idea: a photo-editing app (**"Contour AI"**), run end-to-end from the Design Studio app.
+Everything below was designed **by the agent in Figma** from a one-line idea, run end-to-end from the Design Studio app:
+
+> *"Build an Android app offering 400+ sleek, customizable glass-style home and lock screen widgets that work standalone."* + a Play Store reference link
 
 | | |
 |---|---|
-| **Screens** | 9 hi-fi screens · 9 wireframes · 27 state screens (empty / loading / error / permission / dialogs) |
-| **Design system** | Material 3 color roles (light + dark), type scale, 8dp spacing, shape and component specs — every color pair checked for WCAG AA by script |
-| **Process** | Brief → flow → wireframes → design system → hi-fi in 3 batches, each batch reviewed by the `design-reviewer` agent |
-| **Learning** | 9 lessons captured by the reviewer during the run, reused automatically in later designs |
+| **Screens** | 12 wireframes (starting with `00-Splash`) · 11 hi-fi screens · 3 extra states (Pro lock, permission needed, permission permanently denied) |
+| **Reference** | Analyzed with the reference-analyzer MCP — patterns only (3-tab nav, category rows with live previews, 2-column wallpaper grid). Its brand colors, icons and text were not reused |
+| **Design system** | Dark-first Material 3: cool blue-black neutrals with one ice-teal accent so the widgets stay the colorful thing. Signature move: the **"rim-lit pane"** glass card. 42 color pairs checked for WCAG AA by script |
+| **Lessons** | 10 lessons from earlier runs applied automatically (e.g. every lock/permission gets a designed outcome, 4 nav destinations, paywall wording that matches Google Play) |
+| **Code** | Phase 5 started: 16 Kotlin files — Material 3 theme, tokens, icons, components (`GlassPane`, `LookCard`, `PaneBottomNav`, …) and the first screens in Jetpack Compose |
 
 ### Hi-fi screens (Figma)
 
-**Batch 1 — Home · Editor · Tool adjust**
-![Home, Editor and Tool adjust screens](docs/images/hifi-batch-1.png)
+| Onboarding | Looks | Look detail | Widgets |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/images/pane-01-onboarding.png" width="200" alt="Onboarding"> | <img src="docs/images/pane-02-looks.png" width="200" alt="Looks"> | <img src="docs/images/pane-03-look-detail.png" width="200" alt="Look detail"> | <img src="docs/images/pane-04-widgets.png" width="200" alt="Widgets"> |
+| **Widget detail** | **Customize** | **Wallpapers** | **Mine** |
+| <img src="docs/images/pane-05-widget-detail.png" width="200" alt="Widget detail"> | <img src="docs/images/pane-06-customize.png" width="200" alt="Customize"> | <img src="docs/images/pane-07-wallpapers.png" width="200" alt="Wallpapers"> | <img src="docs/images/pane-08-mine.png" width="200" alt="Mine"> |
+| **Settings** | **Pro paywall** | **Permission sheet** | |
+| <img src="docs/images/pane-09-settings.png" width="200" alt="Settings"> | <img src="docs/images/pane-10-paywall.png" width="200" alt="Pro paywall"> | <img src="docs/images/pane-11-permission.png" width="200" alt="Permission sheet"> | |
 
-**Batch 2 — Photo picker · AI assistant · Export**
-![Photo picker, AI assistant and Export screens](docs/images/hifi-batch-2.png)
+### Locks and permissions get designed outcomes too
 
-**Batch 3 — Onboarding · Paywall · Settings**
-![Onboarding, Paywall and Settings screens](docs/images/hifi-batch-3.png)
+Not just the happy path: what happens when a Pro item is tapped, when exact alarms are off, and when location is permanently denied.
+
+| Pro-locked look | Exact alarm off | Location permanently denied |
+|:---:|:---:|:---:|
+| <img src="docs/images/pane-state-locked-pro.png" width="230" alt="Look detail locked behind Pro"> | <img src="docs/images/pane-state-needs-alarm.png" width="230" alt="Widget detail asking for exact alarm"> | <img src="docs/images/pane-state-permission-denied.png" width="230" alt="Permission sheet after permanent denial"> |
 
 ### Wireframes first — layout decided before color
 
-Grey-box wireframes for all 9 screens, each with a note card listing its empty, loading and error states.
+All 12 screens as grey boxes, starting with the Android 12+ system splash (icon in its safe circle, optional branding slot).
 
-![Wireframes for all screens with state notes](docs/images/wireframes.png)
+![Wireframes for all 12 screens](docs/images/pane-wireframes.png)
 
-### Every screen gets its states
-
-A rule the agent never breaks: each screen is designed for empty, loading and error — not just the happy path.
-
-| Empty | Loading | Error |
-|:---:|:---:|:---:|
-| <img src="docs/images/state-home-empty.png" width="240" alt="Home, empty state"> | <img src="docs/images/state-home-loading.png" width="240" alt="Home, loading skeleton"> | <img src="docs/images/state-home-error.png" width="240" alt="Home, error with retry"> |
+<p align="center"><img src="docs/images/pane-wf-00-splash.png" width="180" alt="Splash wireframe with icon safe circle and branding slot"></p>
 
 ### Real icons, not placeholders
 
@@ -130,11 +138,11 @@ More sample outputs (brief, flow, wireframes, design system as markdown): [`desi
 | Phase | Status |
 |---|---|
 | 0 Setup | ✅ Figma connected via the local bridge |
-| 1 UX thinking | ✅ Tested on expense tracker, gym tracker and Contour AI |
+| 1 UX thinking | ✅ Tested on expense tracker, gym tracker, Contour AI and Pane |
 | 2 Figma design | ✅ Wireframes, hi-fi and states built in Figma · base component library next |
 | 3 Reference analyzer | ✅ Tested on real Play Store links |
 | 4 Critique + lessons | ✅ Reviewer loop and SQLite lessons in use |
-| 5 Figma → Compose | 🟡 Running on a real project; not yet verified with a Gradle build |
+| 5 Figma → Compose | 🟡 Pane: theme, components and first screens generated; not yet verified with a Gradle build |
 | 6 Packaging | ✅ Plugin + local marketplace + web app · Electron desktop app next |
 
 **Copy rule:** reference apps are used for patterns and structure only — never their icons, illustrations, brand colors or text.

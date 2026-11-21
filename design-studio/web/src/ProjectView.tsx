@@ -32,10 +32,11 @@ export function ProjectView({ id, onChange }: { id: string; onChange: () => void
   if (!project) return <div className="page muted">Loading…</div>;
 
   return (
-    <div className="page">
+    <div className="page project-page">
+      <div className="project-top">
       <header className="page-head row-between">
         <div className="min0">
-          <h1 className="clamp">{project.idea}</h1>
+          <h1 className="clamp1" title={project.idea}>{project.idea}</h1>
           <p className="muted small">
             {project.ref ? (
               <>Reference: <a href={project.ref} target="_blank" rel="noreferrer">{shortUrl(project.ref)}</a> · </>
@@ -47,7 +48,9 @@ export function ProjectView({ id, onChange }: { id: string; onChange: () => void
         <div className="row gap">
           <StatusBadge status={project.status} />
           {project.status === "running" && (
-            <button className="btn btn-outline" onClick={() => api.stop(id).then(load)}>Stop</button>
+            <button className="btn btn-danger" onClick={() => api.stop(id).then(load)}>
+              <span className="stop-square" aria-hidden /> Stop
+            </button>
           )}
         </div>
       </header>
@@ -56,6 +59,7 @@ export function ProjectView({ id, onChange }: { id: string; onChange: () => void
         <TabBtn cur={tab} me="activity" set={setTab}>Activity</TabBtn>
         <TabBtn cur={tab} me="files" set={setTab}>Design files ({project.files.length})</TabBtn>
         <TabBtn cur={tab} me="previews" set={setTab}>Previews ({project.previews.length})</TabBtn>
+      </div>
       </div>
 
       {tab === "activity" && <Activity id={id} project={project} events={events} onSent={load} />}
@@ -79,12 +83,56 @@ function Activity({ id, project, events, onSent }: { id: string; project: Projec
   const [msg, setMsg] = useState("");
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
+  const [stopping, setStopping] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
+  const running = project.status === "running";
 
+  // Follow new events only when the user is already near the bottom — don't yank them away while reading.
   // Block body on purpose: scrollIntoView may return a Promise, and an effect must return nothing or a cleanup fn.
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end" });
+    const scroller = bottom.current?.closest(".main");
+    const nearBottom = !scroller || scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 240;
+    if (nearBottom) bottom.current?.scrollIntoView({ block: "end" });
   }, [events.length]);
+
+  // When a run ends, "Approve & continue" appears where "Stop" was. Hold the buttons briefly so a click
+  // meant for Stop can't land on Approve and start the next step.
+  const [cooldown, setCooldown] = useState(false);
+  const wasRunning = useRef(running);
+  useEffect(() => {
+    if (!running) setStopping(false);
+    if (wasRunning.current && !running) {
+      setCooldown(true);
+      const t = setTimeout(() => setCooldown(false), 1200);
+      wasRunning.current = running;
+      return () => clearTimeout(t);
+    }
+    wasRunning.current = running;
+  }, [running]);
+
+  async function stop() {
+    if (stopping) return;
+    setStopping(true);
+    try {
+      await api.stop(id);
+      onSent();
+    } catch (e) {
+      setErr((e as Error).message);
+      setStopping(false);
+    }
+  }
+
+  // Esc stops the agent while it is working (ignored while typing in a field or when a lightbox is open).
+  useEffect(() => {
+    if (!running) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (e.key === "Escape" && !document.querySelector(".lightbox") && !(t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) stop();
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, id]);
 
   const resolved = useMemo(
     () => new Set(events.filter((e) => e.kind === "permission_done").map((e) => (e as { requestId: string }).requestId)),
@@ -120,14 +168,27 @@ function Activity({ id, project, events, onSent }: { id: string; project: Projec
         {events.map((e, i) => (
           <EventRow key={i} e={e} id={id} result={e.kind === "tool" ? results.get(e.id) : undefined} pending={e.kind === "permission" && !resolved.has(e.requestId)} />
         ))}
-        {project.status === "running" && <div className="typing"><span /><span /><span /> working</div>}
         <div ref={bottom} />
       </div>
 
       <div className={`composer card ${canReply ? "" : "disabled"}`}>
+        {err && <div className="banner banner-error">{err}</div>}
+        {running && (
+          <div className="working-bar">
+            <div className="typing"><span /><span /><span /> {stopping ? "Stopping…" : "Agent is working"}</div>
+            <button className="btn btn-danger" onClick={stop} disabled={stopping} title="Stop the agent (Esc)">
+              <span className="stop-square" aria-hidden /> {stopping ? "Stopping…" : "Stop"}
+              {!stopping && <kbd>Esc</kbd>}
+            </button>
+          </div>
+        )}
         {project.status === "waiting" && (
           <p className="composer-hint">The agent stopped at an approval gate. Approve to continue, or write what to change.</p>
         )}
+        {project.status === "stopped" && (
+          <p className="composer-hint">Stopped. Write what to do next, or approve to continue from where it stopped.</p>
+        )}
+        {!running && (<>
         <textarea
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
@@ -138,19 +199,19 @@ function Activity({ id, project, events, onSent }: { id: string; project: Projec
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(msg);
           }}
         />
-        {err && <div className="banner banner-error">{err}</div>}
         <div className="row gap end">
-          <button className="btn btn-outline" disabled={!canReply || sending || !msg.trim()} onClick={() => send(msg)}>
+          <button className="btn btn-outline" disabled={!canReply || sending || cooldown || !msg.trim()} onClick={() => send(msg)}>
             Send changes
           </button>
           <button
             className="btn btn-primary"
-            disabled={!canReply || sending}
+            disabled={!canReply || sending || cooldown}
             onClick={() => send("Approved. Continue to the next step of the pipeline.")}
           >
             Approve & continue
           </button>
         </div>
+        </>)}
       </div>
     </div>
   );

@@ -234,3 +234,28 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--p
   .toolbar { flex-direction: column; }
   .toolbar select { width: 100%; }
 }
+
+/* Sticky project header + tabs: always reachable, however long the chat gets */
+.project-page { padding-top: 0; }
+.project-top {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg);
+  padding-top: 20px;
+  margin-bottom: 16px;
+}
+.project-top .page-head { margin-bottom: 8px; }
+.project-top .tabs { margin-bottom: 0; }
+.project-top h1 { font-size: 22px; }
+.files .file-list { top: 128px; max-height: calc(100vh - 148px); overflow-y: auto; }
+
+/* Stop */
+.btn-danger { background: var(--error-soft); color: var(--error); border-color: transparent; }
+.btn-danger:not(:disabled):hover { filter: brightness(0.97); outline: 1px solid var(--error); }
+.stop-square { width: 10px; height: 10px; border-radius: 2px; background: currentColor; display: inline-block; }
+kbd {
+  font: 600 11px ui-monospace, Menlo, monospace; padding: 1px 6px; border-radius: 5px;
+  border: 1px solid currentColor; opacity: 0.7; margin-left: 2px;
+}
+.working-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.working-bar .typing { font-size: 14px; color: var(--text); }
+.composer.disabled { opacity: 1; }
